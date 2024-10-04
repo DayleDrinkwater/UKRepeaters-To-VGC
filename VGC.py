@@ -4,17 +4,15 @@ import requests
 from maidenhead import to_location
 from geopy.distance import distance
 
-#Requires the maidenhead and geopy libraries to be installed
+# Requires the maidenhead and geopy libraries to be installed
 # pip install maidenhead geopy
 
 # Prompt the user for the grid locator
 user_locator = input("Enter the grid locator (e.g., IO83QJ): ")
 
-# Convert the user's grid locator to a coarser level (4-character grid square)
-coarse_locator = user_locator[:4]
 
 # Fetch the data from the API
-api_url = f"https://api-beta.rsgb.online/locator/{coarse_locator}"
+api_url = "https://api-beta.rsgb.online/all/systems"
 response = requests.get(api_url)
 data = response.json()['data']
 
@@ -29,7 +27,7 @@ filtered_data = [
 
 # Sort the filtered data based on distance from the user's grid locator
 user_location = to_location(user_locator)
-filtered_data.sort(key=lambda item: distance(user_location, to_location(item['locator'])).km)
+filtered_data.sort(key=lambda item: distance((user_location[1], user_location[0]), (to_location(item['locator'])[1], to_location(item['locator'])[0])).km)
 
 # Ask the user if the APRS entry should be included
 aprs_entry = input("Should the APRS entry be included at position 1? (yes/no): ").strip().lower() == 'yes'
@@ -46,8 +44,8 @@ csv_headers = [
     'rx_modulation(0=FM/1=AM)', 'tx_modulation(0=FM/1=AM)'
 ]
 
-# Check if filtered data length exceeds the number of entries and print a warning
-if len(filtered_data) > num_entries:
+# Check if filtered data length exceeds the number of entries and print a warning if the user selected 16 entries
+if num_entries == 16 and len(filtered_data) > num_entries:
     print(f"Warning: The data contains more than {num_entries} entries. The additional CSV files will need to be imported as well to add all repeaters.")
 
 # Function to write data to a CSV file
@@ -99,11 +97,12 @@ def write_csv(file_name, data, aprs_entry):
             writer.writerow(row)
 
 # Write the first CSV file
-write_csv(f'Repeaters - {user_locator} - Part 1.csv', filtered_data[:num_entries], aprs_entry)
+write_csv(f'Repeaters - {user_locator}.csv', filtered_data[:num_entries], aprs_entry)
 
 # Generate additional files if needed
-for i in range(1, (len(filtered_data) - num_entries) // num_entries + 2):
-    start_index = num_entries + (i - 1) * num_entries
+if num_entries == 16:
+    start_index = num_entries
     end_index = start_index + num_entries
-    additional_csv_file = f'Repeaters - {user_locator} - Part {i + 1}.csv'
-    write_csv(additional_csv_file, filtered_data[start_index:end_index], aprs_entry)
+    if start_index < len(filtered_data):
+        additional_csv_file = f'Repeaters - {user_locator} - Part 2.csv'
+        write_csv(additional_csv_file, filtered_data[start_index:end_index], aprs_entry)
