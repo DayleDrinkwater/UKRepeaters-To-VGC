@@ -18,15 +18,6 @@ api_url = f"https://api-beta.rsgb.online/locator/{coarse_locator}"
 response = requests.get(api_url)
 data = response.json()['data']
 
-# Debug: Print the raw data fetched from the API
-print("Raw data fetched from the API:")
-print(json.dumps(data, indent=2))
-
-# Debug: Print the structure of a few items in the raw data
-if data:
-    print("Structure of the first item in the raw data:")
-    print(json.dumps(data[0], indent=2))
-
 # Filter the data based on the specified criteria
 filtered_data = [
     item for item in data 
@@ -39,10 +30,6 @@ filtered_data = [
 # Sort the filtered data based on distance from the user's grid locator
 user_location = to_location(user_locator)
 filtered_data.sort(key=lambda item: distance(user_location, to_location(item['locator'])).km)
-
-# Debug: Print the filtered and sorted data
-print("Filtered and sorted data:")
-print(json.dumps(filtered_data, indent=2))
 
 # Ask the user if the APRS entry should be included
 aprs_entry = input("Should the APRS entry be included at position 1? (yes/no): ").strip().lower() == 'yes'
