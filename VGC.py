@@ -67,8 +67,8 @@ with open(csv_file, 'w', newline='') as csvfile:
         ctcss_value = int(float(item['ctcss']) * 100)
         row = {
             'title': item['repeater'],
-            'tx_freq': str(item['tx']).replace('.', ''),
-            'rx_freq': str(item['rx']).replace('.', ''),
+            'tx_freq': str(item['rx']).replace('.', ''),  # Swapped tx and rx due to repeater data -> end user radio
+            'rx_freq': str(item['tx']).replace('.', ''),  # Swapped tx and rx due to repeater data -> end user radio
             'tx_sub_audio(CTCSS=freq/DCS=number)': f"{ctcss_value}",
             'rx_sub_audio(CTCSS=freq/DCS=number)': f"{ctcss_value}",
             'tx_power(H/M/L)': 'H' if item['dbwErp'] > 5 else 'L',
