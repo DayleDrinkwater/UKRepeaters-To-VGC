@@ -1,12 +1,20 @@
 import json
 import csv
 import requests
+from maidenhead import to_location
+from geopy.distance import distance
+
+#Requires the maidenhead and geopy libraries to be installed
+# pip install maidenhead geopy
 
 # Prompt the user for the grid locator
-grid_locator = input("Enter the grid locator (e.g., IO83): ")
+user_locator = input("Enter the grid locator (e.g., IO83QJ): ")
+
+# Convert the user's grid locator to a coarser level (4-character grid square)
+coarse_locator = user_locator[:4]
 
 # Fetch the data from the API
-api_url = f"https://api-beta.rsgb.online/locator/{grid_locator}"
+api_url = f"https://api-beta.rsgb.online/locator/{coarse_locator}"
 response = requests.get(api_url)
 data = response.json()['data']
 
@@ -23,17 +31,21 @@ if data:
 filtered_data = [
     item for item in data 
     if item.get('modeCodes') and 'A' in item['modeCodes'] 
-    and item.get('type') == 'AV' 
+    and item.get('type') in ['AV', 'DM'] 
     and item.get('band') in ['2M', '70CM']
-    and item.get('status') != 'NOT OPERATIONAL'
+    and item.get('status') == 'OPERATIONAL'
 ]
 
-# Debug: Print the filtered data
-print("Filtered data:")
+# Sort the filtered data based on distance from the user's grid locator
+user_location = to_location(user_locator)
+filtered_data.sort(key=lambda item: distance(user_location, to_location(item['locator'])).km)
+
+# Debug: Print the filtered and sorted data
+print("Filtered and sorted data:")
 print(json.dumps(filtered_data, indent=2))
 
 # Prepare the CSV file with a name based on the grid locator
-csv_file = f'Repeaters - {grid_locator}.csv'
+csv_file = f'Repeaters - {user_locator}.csv'
 csv_headers = [
     'title', 'tx_freq', 'rx_freq', 'tx_sub_audio(CTCSS=freq/DCS=number)', 
     'rx_sub_audio(CTCSS=freq/DCS=number)', 'tx_power(H/M/L)', 'bandwidth(12500/25000)', 
