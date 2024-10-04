@@ -87,7 +87,7 @@ def write_csv(file_name, data, aprs_entry):
                 'rx_sub_audio(CTCSS=freq/DCS=number)': f"{ctcss_value}",
                 'tx_power(H/M/L)': 'H' if item['dbwErp'] > 5 else 'L',
                 'bandwidth(12500/25000)': '12500' if item['txbw'] == 12.5 else '25000',
-                'scan(0=OFF/1=ON)': '0',
+                'scan(0=OFF/1=ON)': '1',
                 'talk around(0=OFF/1=ON)': '0',
                 'pre_de_emph_bypass(0=OFF/1=ON)': '0',
                 'sign(0=OFF/1=ON)': '0',
